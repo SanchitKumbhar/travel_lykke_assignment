@@ -1,0 +1,213 @@
+{% extends "index.html" %}
+
+{% block title %}travel-options{% endblock title %}
+
+{% block style %}
+ <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .filter-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .travel-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .travel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .travel-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            margin-right: 15px;
+        }
+        .card-body h5 {
+            font-weight: 600;
+        }
+        #search-results {
+            margin-top: 30px;
+        }
+    </style>
+{% endblock style %}
+   
+{% block main %}
+
+    <div class="container mt-5">
+        <header class="text-center mb-5">
+            <h1>Find Your Next Adventure</h1>
+            <p class="lead text-muted">Browse and book from our wide range of flights, trains, and buses.</p>
+        </header>
+
+        <div class="filter-section">
+            <h5 class="mb-3 text-muted">Search for Travel</h5>
+            <form id="travel-form" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <select name="type" class="form-select form-select-lg">
+                        <option selected>Type</option>
+                        <option value="A">Flight</option>
+                        <option value="B">Train</option>
+                        <option value="C">Bus</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="source" class="form-select form-select-lg">
+                        <option selected>Source</option>
+                        <option>Pune</option>
+                        <option>Mumbai</option>
+                        <option>Delhi</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="destination" class="form-select form-select-lg">
+                        <option selected>Destination</option>
+                        <option>Pune</option>
+                        <option>Mumbai</option>
+                        <option>Delhi</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input name="date"
+                        placeholder="Date" 
+                        type="date" 
+                        class="form-control form-control-lg"
+                        value="2025-09-27">
+                </div>
+                <div class="col-md-3">
+                    <input name="time"
+                        placeholder="Time" 
+                        type="time" 
+                        class="form-control form-control-lg"
+                        value="06:00">
+                </div>
+                <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 mt-3">Search</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Placeholder for dynamic search results -->
+        <div id="search-results" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <!-- Travel cards will be inserted here by JavaScript -->
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('travel-form');
+            const searchResultsContainer = document.getElementById('search-results');
+            
+            // Initial call to show some default travel options on page load
+            const defaultResults = [
+                { type: 'Flight', source: 'New York', destination: 'London', date: 'Dec 25, 2025', time: '14:00', price: '500', seats: 15 },
+                { type: 'Train', source: 'Berlin', destination: 'Paris', date: 'Dec 26, 2025', time: '08:30', price: '120', seats: 30 },
+                { type: 'Bus', source: 'Melbourne', destination: 'Sydney', date: 'Dec 27, 2025', time: '10:00', price: '80', seats: 42 }
+            ];
+            renderTravelCards(defaultResults);
+
+            // Function to handle form submission
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+
+                // Show a loading message
+                searchResultsContainer.innerHTML = '<div class="col-12 text-center"><h4>Loading...</h4></div>';
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                let results;
+
+                try {
+                    const response = await fetch('/check-travel-options', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Include CSRF token
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    results = await response.json();
+                    
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    searchResultsContainer.innerHTML = '<div class="col-12 text-center text-danger"><h4>An error occurred while fetching data. Please check the console for details.</h4></div>';
+                    return; // Stop execution if fetch fails
+                }
+                
+                // Now, check the data type of the results
+                if (Array.isArray(results)) {
+                    renderTravelCards(results);
+                } else {
+                    console.error('Backend did not return an array:', results);
+                    searchResultsContainer.innerHTML = '<div class="col-12 text-center text-danger"><h4>The server returned an invalid data format.</h4></div>';
+                }
+            }
+
+            // Function to render travel cards
+            function renderTravelCards(cards) {
+                searchResultsContainer.innerHTML = '';
+                // Add a robust check for the input type
+                if (!Array.isArray(cards) || cards.length === 0) {
+                    searchResultsContainer.innerHTML = '<div class="col-12 text-center"><h4>No results found.</h4></div>';
+                    return;
+                }
+
+                cards.forEach(card => {
+                    // Access the data from the nested 'fields' object
+                    const fields = card.fields || {};
+                    const type = fields.travel_type || '';
+                    const source = fields.source || '';
+                    const destination = fields.destination || '';
+                    const date = fields.date || '';
+                    const time = fields.time ? fields.time.substring(0, 5) : ''; // Format time
+                    const price = fields.price || 'N/A';
+                    const seats = fields.available_seats || 'N/A';
+
+                    const iconClass = type === 'A' ? 'fas fa-plane' : type === 'B' ? 'fas fa-train' : 'fas fa-bus';
+                    const currency = type === 'A' ? '$' : type === 'B' ? '€' : '$';
+
+                    const cardHtml = `
+                        <div class="col">
+                            <div class="card travel-card h-100">
+                                <div class="card-body d-flex align-items-center">
+                                    <i class="${iconClass} travel-icon"></i>
+                                    <div>
+                                        <h5 class="card-title">${type === 'A' ? 'Flight' : type === 'B' ? 'Train' : 'Bus'} from ${source} to ${destination}</h5>
+                                        <p class="card-text mb-1">${source} → ${destination}</p>
+                                        <p class="text-muted mb-1">${date} at ${time}</p>
+                                        <span class="badge bg-success me-2">${currency}${price}</span>
+                                        <span class="badge bg-info">${seats} seats left</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-end bg-transparent border-top-0">
+                                    <a href="#" class="btn btn-outline-primary">Book Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    searchResultsContainer.innerHTML += cardHtml;
+                });
+            }
+
+            // Add event listener to the form
+            form.addEventListener('submit', handleFormSubmit);
+            
+        });
+    </script>
+
+{% endblock main %}
