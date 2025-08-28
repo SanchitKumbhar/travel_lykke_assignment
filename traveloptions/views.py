@@ -35,8 +35,6 @@ def process_travel_options(request):
             time=time
         )
         
-        # Corrected line: deserialize the JSON string into a Python object
-        # and then pass it to JsonResponse
         serialized_data = serializers.serialize("json", obj)
         data = json.loads(serialized_data)
         
