@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "authentication",
-    "traveloptions"
+    "traveloptions",
+    "booking"
 ]
+
+
+LOGIN_URL = '/authentication' 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

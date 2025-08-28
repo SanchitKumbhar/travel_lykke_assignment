@@ -1,63 +1,166 @@
-{% block title %}booking form{% endblock title %}
+{% extends "index.html" %}
+{% load static %}
+
+{% block title %}Confirm Booking{% endblock title %}
+
+{% block style %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .booking-card {
+        max-width: 600px;
+        margin: 50px auto;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+        background-color: #0d6efd;
+        color: #fff;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+        padding: 20px;
+    }
+    .form-control-lg, .btn-lg {
+        border-radius: 8px;
+    }
+</style>
+{% endblock style %}
 
 {% block main %}
 <div class="card booking-card">
-        <div class="card-header">
-            <h4 class="mb-0">Confirm Your Booking</h4>
-            <p class="mb-0">Review details and finalize your reservation.</p>
-        </div>
-        <div class="card-body p-4">
-            <form action="#" method="post">
-                <div class="mb-4">
-                    <h5 class="text-muted">Travel Details</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-plane me-2 text-primary"></i>Travel Option</span>
-                            <span class="fw-bold">Flight to London</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-route me-2 text-primary"></i>Route</span>
-                            <span>New York <i class="fas fa-arrow-right mx-1"></i> London</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="far fa-calendar-alt me-2 text-primary"></i>Date & Time</span>
-                            <span>Dec 25, 2025 at 14:00</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-dollar-sign me-2 text-primary"></i>Price per Seat</span>
-                            <span class="text-success fw-bold">$500</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="mb-4">
-                    <h5 class="text-muted">Booking Information</h5>
-                    <div class="mb-3">
-                        <label for="seats" class="form-label">Number of Seats</label>
-                        <input type="number" class="form-control form-control-lg" id="seats" name="seats" min="1" max="15" required>
-                        <div class="form-text">Maximum 15 seats available.</div>
-                    </div>
-                </div>
-
-                <div class="mb-4 text-center p-3 rounded-3 bg-light">
-                    <h4>Total Price: <span class="text-primary fw-bold" id="totalPrice">$0</span></h4>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg w-100">Confirm Booking</button>
-            </form>
-        </div>
+    <div class="card-header">
+        <h4 class="mb-0">Confirm Your Booking</h4>
+        <p class="mb-0">Review details and finalize your reservation.</p>
     </div>
+    <div class="card-body p-4">
+        <form method="post" id="booking-form">
+            {% csrf_token %}
+            
+            <!-- Travel details -->
+            <div class="mb-4">
+                <h5 class="text-muted">Travel Details</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-plane me-2 text-primary"></i>Travel Option</span>
+                        <span class="fw-bold">{{ travel_option.type }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-map-marker-alt me-2 text-primary"></i>Departure</span>
+                        <span>{{ travel_option.source }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-map-pin me-2 text-primary"></i>Destination</span>
+                        <span>{{ travel_option.destination }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="far fa-calendar-alt me-2 text-primary"></i>Date</span>
+                        <span>{{ travel_option.date }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="far fa-clock me-2 text-primary"></i>Time</span>
+                        <span>{{ travel_option.time }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-dollar-sign me-2 text-primary"></i>Price per Seat</span>
+                        <span class="text-success fw-bold" id="price-per-seat">${{ travel_option.price }}</span>
+                    </li>
+                </ul>
+            </div>
 
-    <script>
-        // JavaScript for dynamic price calculation
-        const pricePerSeat = 500; // This value would be dynamic from the backend
-        const seatsInput = document.getElementById('seats');
-        const totalPriceElement = document.getElementById('totalPrice');
+            <!-- Booking info -->
+            <div class="mb-4">
+                <h5 class="text-muted">Booking Information</h5>
+                <div class="mb-3">
+                    <label for="seats" class="form-label">Number of Seats</label>
+                    <input type="number" class="form-control form-control-lg" id="seats" name="seats" 
+                           min="1" max="{{ travel_option.available_seats }}" value="1" required>
+                    <div class="form-text">Maximum {{ travel_option.available_seats }} seats available.</div>
+                </div>
+            </div>
 
-        seatsInput.addEventListener('input', function() {
-            const seats = parseInt(this.value) || 0;
-            const totalPrice = seats * pricePerSeat;
-            totalPriceElement.textContent = `$${totalPrice}`;
-        });
-    </script>
+            <!-- Hidden values -->
+            <input type="hidden" id="total_price_hidden" name="total_price">
+
+            <!-- Total price -->
+            <div class="mb-4 text-center p-3 rounded-3 bg-light">
+                <h4>Total Price: <span class="text-primary fw-bold" id="totalPrice">$0</span></h4>
+            </div>
+
+            <button type="submit" id="submit-button" class="btn btn-primary btn-lg w-100">
+                Confirm Booking
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const seatsInput = document.getElementById("seats");
+    const totalPriceElement = document.getElementById("totalPrice");
+    const totalPriceHiddenInput = document.getElementById("total_price_hidden");
+
+    // ✅ Django values directly in JS
+    const travelOptionId = "{{ travel_option.pk }}";
+    const travelOptionDate = "{{ travel_option.date }}";
+    const travelOptionTime = "{{ travel_option.time }}";
+    const pricePerSeat = parseFloat("{{ travel_option.price|floatformat:2 }}");
+
+    // Update total price
+    const updateTotalPrice = () => {
+        const seats = parseInt(seatsInput.value) || 0;
+        const totalPrice = (seats * pricePerSeat).toFixed(2);
+        totalPriceElement.textContent = `$${totalPrice}`;
+        totalPriceHiddenInput.value = totalPrice;
+    };
+
+    updateTotalPrice();
+    seatsInput.addEventListener("input", updateTotalPrice);
+
+    // CSRF helper
+    const getCSRFToken = (name = "csrftoken") => {
+        return document.cookie.split(";")
+            .map(c => c.trim())
+            .find(c => c.startsWith(name + "="))
+            ?.split("=")[1] || null;
+    };
+
+    // Handle submit
+    document.getElementById("booking-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const data = {
+            seats: seatsInput.value,
+            total_price: totalPriceHiddenInput.value,
+            travel_option_id: travelOptionId,
+            travel_date: travelOptionDate,
+            travel_time: travelOptionTime
+        };
+
+        try {
+            const response = await fetch(`/booking-form/confirm`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            }
+
+            const result = await response.json();
+            console.log("Booking successful:", result);
+
+            alert("Booking Confirmed!");
+        } catch (error) {
+            console.error("Booking error:", error);
+            alert("An error occurred. Please try again.");
+        }
+    });
+});
+</script>
 {% endblock main %}

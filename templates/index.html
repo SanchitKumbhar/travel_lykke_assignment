@@ -21,11 +21,15 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="#">Travel Options</a></li>
-                    <li class="nav-item"><a class="nav-link" href="my_bookings.html">My Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="login.html">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/travel-options">Travel Options</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/client-bookings">My Bookings</a></li>
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="/profile">{{request.user.username}}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="/authentication">signin/signup</a></li>
+                {% endif %}
                 </ul>
             </div>
         </div>

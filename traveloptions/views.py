@@ -3,9 +3,12 @@ from .models import TravelOptions
 from django.core import serializers
 from django.http import JsonResponse
 import json 
+from django.contrib.auth.decorators import login_required
 # Create your views here.
+@login_required
 def render_travel_options(request):
     return render(request,"travel_options.html")
+
 
 def process_travel_options(request):
     if request.method == "POST":
