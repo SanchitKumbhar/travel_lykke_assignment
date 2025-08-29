@@ -3,6 +3,7 @@
 A full-stack travel booking website built with Django for internship assessment. Users can register, log in, search for travel options (flights, trains, buses), book tickets, and view/manage their bookings.
 
 URL : https://sanchitkumbhar.pythonanywhere.com/
+login:- username: root password: 1234
 
 ## Features
 
